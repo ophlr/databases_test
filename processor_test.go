@@ -2,7 +2,6 @@ package benchmark
 
 import (
 	"database/sql"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -52,6 +51,7 @@ type BuOrderBasicInfo struct {
 	StrategyId  sql.NullString
 	Canceling   bool
 	Note        sql.NullString
+	CloseNote   sql.NullString
 }
 
 type GridProOrderData struct {
@@ -129,6 +129,9 @@ type GridProOrderData struct {
 	ProfitWithdrawn          sql.NullString
 	FeeTotalInvestment       sql.NullString
 	GridAverageOpenPrice     sql.NullString
+	OpenAction               sql.NullString
+	OpenBaseAmount           sql.NullString
+	OpenQuoteAmount          sql.NullString
 }
 
 type PairedExchangeOrderData struct {
@@ -225,6 +228,7 @@ func queryBuOrderBasicInfos(db *sql.DB) ([]BuOrderBasicInfo, error) {
 			&o.StrategyId,
 			&o.Canceling,
 			&o.Note,
+			&o.CloseNote,
 		)
 		if err != nil {
 			return nil, err
@@ -320,6 +324,9 @@ func queryGridProOrderData(db *sql.DB) ([]GridProOrderData, error) {
 			&o.ProfitWithdrawn,
 			&o.FeeTotalInvestment,
 			&o.GridAverageOpenPrice,
+			&o.OpenAction,
+			&o.OpenBaseAmount,
+			&o.OpenQuoteAmount,
 		)
 		if err != nil {
 			return nil, err
@@ -1226,8 +1233,3 @@ func BenchmarkProcessBatch1000(b *testing.B) {
 	})
 }
 
-func BenchmarkHello(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		fmt.Sprintf("hello")
-	}
-}
