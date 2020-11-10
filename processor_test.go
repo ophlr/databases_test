@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	parallelism = 36
+	parallelism = 1
 
 	// dataSourceName = "root:123456@tcp(localhost:3306)/trade_service?collation=utf8_unicode_ci&charset=utf8mb4"
-	dataSourceName = "portfolio:uYp-LSH-JK6-oHx@tcp(trade-service-db-for-pm-clone-cluster.cxkoyxy3iavk.ap-northeast-1.rds.amazonaws.com:3306)/trade_service?collation=utf8_unicode_ci&charset=utf8mb4"
+	dataSourceName = "portfolio:uYp-LSH-JK6-oHx@tcp(trading-bot-clone-auora-rds-4x-cluster.cmr8sblnu0ix.us-west-2.rds.amazonaws.com:3306)/trade_service?collation=utf8_unicode_ci&charset=utf8mb4"
 
 	selectBuOrderBasicInfoSQL           = "SELECT * FROM `OrderStatusCenter_buorderbasicinfo` ORDER BY `id` DESC LIMIT ?"
 	insertBuOrderBasicInfoSQL           = "INSERT INTO `OrderStatusCenter_buorderbasicinfo` (`bu_order_id`, `user_id`, `key_id`, `exchange`, `base`, `quote`, `bu_order_type`, `status`, `create_time`, `close_time`, `copy_from`, `copy_type`, `strategy_id`, `canceling`, `note`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
