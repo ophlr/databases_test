@@ -1,0 +1,1 @@
+GOMAXPROCS=1 go test -bench=. -benchmem -benchtime=60s
