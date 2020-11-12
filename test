@@ -1,0 +1,23 @@
+sudo -i
+
+kubectl  exec -it dind-5d59b78955-swmxh sh -n dind
+
+git pull origin master
+
+docker build -t 651538853910.dkr.ecr.us-west-2.amazonaws.com/databases-test:v1.0 .
+docker push 651538853910.dkr.ecr.us-west-2.amazonaws.com/databases-test:v1.0
+
+8278+6883
+9086+6855
+8902+6513
+
+
+9292 6609 7969 12302
+9319 7114 7700 10000
+6553 9025 7137 10000
+
+
+
+6906 7136 6966 10000 9360 6848 6579 9000
+6513 6914 7645 10000 8995 6862 6579 7969
+6922 6722 6910 10000 8685 6939 6458 8587

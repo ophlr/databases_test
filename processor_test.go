@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	parallelism = 1
+	parallelism = 36
 
 	// dataSourceName = "root:123456@tcp(localhost:3306)/trade_service?collation=utf8_unicode_ci&charset=utf8mb4"
 	dataSourceName = "portfolio:uYp-LSH-JK6-oHx@tcp(trading-bot-clone-auora-rds-4x-cluster.cluster-cmr8sblnu0ix.us-west-2.rds.amazonaws.com:3306)/trade_service?collation=utf8_unicode_ci&charset=utf8mb4"
