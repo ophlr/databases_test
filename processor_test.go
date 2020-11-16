@@ -985,7 +985,85 @@ func process(db *sql.DB, basicOrders []BuOrderBasicInfo, gridOrders []GridProOrd
 	return err
 }
 
-func BenchmarkOnlyUpdateBuOrderBasicInfo(b *testing.B) {
+//func BenchmarkOnlyUpdateBuOrderBasicInfo(b *testing.B) {
+//	db, err := sql.Open("mysql", dataSourceName)
+//	if err != nil {
+//		panic(err.Error())
+//	}
+//	defer db.Close()
+//
+//	db.SetMaxOpenConns(parallelism)
+//	db.SetMaxIdleConns(parallelism / 2)
+//	db.SetConnMaxLifetime(120 * time.Second)
+//
+//	basicOrders, err := queryBuOrderBasicInfos(db)
+//	if err != nil {
+//		b.Error(err.Error())
+//	}
+//
+//	b.SetParallelism(parallelism)
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			if err := processUpdateBuOrderBasicInfo(db, basicOrders); err != nil {
+//				b.Error(err.Error())
+//			}
+//		}
+//	})
+//}
+//
+//func BenchmarkOnlyUpdateGridProOrderData(b *testing.B) {
+//	db, err := sql.Open("mysql", dataSourceName)
+//	if err != nil {
+//		panic(err.Error())
+//	}
+//	defer db.Close()
+//
+//	db.SetMaxOpenConns(parallelism)
+//	db.SetMaxIdleConns(parallelism / 2)
+//	db.SetConnMaxLifetime(120 * time.Second)
+//
+//	gridOrders, err := queryGridProOrderData(db)
+//	if err != nil {
+//		b.Error(err.Error())
+//	}
+//
+//	b.SetParallelism(parallelism)
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			if err := processUpdateGridProOrderData(db, gridOrders); err != nil {
+//				b.Error(err.Error())
+//			}
+//		}
+//	})
+//}
+//
+//func BenchmarkOnlyInsertPairedExchangeOrderData(b *testing.B) {
+//	db, err := sql.Open("mysql", dataSourceName)
+//	if err != nil {
+//		panic(err.Error())
+//	}
+//	defer db.Close()
+//
+//	db.SetMaxOpenConns(parallelism)
+//	db.SetMaxIdleConns(parallelism / 2)
+//	db.SetConnMaxLifetime(120 * time.Second)
+//
+//	pairedOrders, err := queryPairedExchangeOrderData(db)
+//	if err != nil {
+//		b.Error(err.Error())
+//	}
+//
+//	b.SetParallelism(parallelism)
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			if err := processInsertPairedExchangeOrderData(db, pairedOrders); err != nil {
+//				b.Error(err.Error())
+//			}
+//		}
+//	})
+//}
+
+func BenchmarkProcess(b *testing.B) {
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		panic(err.Error())
@@ -1000,54 +1078,10 @@ func BenchmarkOnlyUpdateBuOrderBasicInfo(b *testing.B) {
 	if err != nil {
 		b.Error(err.Error())
 	}
-
-	b.SetParallelism(parallelism)
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			if err := processUpdateBuOrderBasicInfo(db, basicOrders); err != nil {
-				b.Error(err.Error())
-			}
-		}
-	})
-}
-
-func BenchmarkOnlyUpdateGridProOrderData(b *testing.B) {
-	db, err := sql.Open("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-
-	db.SetMaxOpenConns(parallelism)
-	db.SetMaxIdleConns(parallelism / 2)
-	db.SetConnMaxLifetime(120 * time.Second)
-
 	gridOrders, err := queryGridProOrderData(db)
 	if err != nil {
 		b.Error(err.Error())
 	}
-
-	b.SetParallelism(parallelism)
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			if err := processUpdateGridProOrderData(db, gridOrders); err != nil {
-				b.Error(err.Error())
-			}
-		}
-	})
-}
-
-func BenchmarkOnlyInsertPairedExchangeOrderData(b *testing.B) {
-	db, err := sql.Open("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-
-	db.SetMaxOpenConns(parallelism)
-	db.SetMaxIdleConns(parallelism / 2)
-	db.SetConnMaxLifetime(120 * time.Second)
-
 	pairedOrders, err := queryPairedExchangeOrderData(db)
 	if err != nil {
 		b.Error(err.Error())
@@ -1056,179 +1090,145 @@ func BenchmarkOnlyInsertPairedExchangeOrderData(b *testing.B) {
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if err := processInsertPairedExchangeOrderData(db, pairedOrders); err != nil {
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 1); err != nil {
 				b.Error(err.Error())
 			}
 		}
 	})
 }
 
-//func BenchmarkProcess(b *testing.B) {
-//	db, err := sql.Open("mysql", dataSourceName)
-//	if err != nil {
-//		panic(err.Error())
-//	}
-//	defer db.Close()
-//
-//	db.SetMaxOpenConns(parallelism)
-//	db.SetMaxIdleConns(parallelism / 2)
-//	db.SetConnMaxLifetime(120 * time.Second)
-//
-//	basicOrders, err := queryBuOrderBasicInfos(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	gridOrders, err := queryGridProOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	pairedOrders, err := queryPairedExchangeOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//
-//	b.SetParallelism(parallelism)
-//	b.RunParallel(func(pb *testing.PB) {
-//		for pb.Next() {
-//			if err := process(db, basicOrders, gridOrders, pairedOrders, 1); err != nil {
-//				b.Error(err.Error())
-//			}
-//		}
-//	})
-//}
-//
-//func BenchmarkProcessBatch10(b *testing.B) {
-//	db, err := sql.Open("mysql", dataSourceName)
-//	if err != nil {
-//		panic(err.Error())
-//	}
-//	defer db.Close()
-//
-//	db.SetMaxOpenConns(parallelism)
-//	db.SetMaxIdleConns(parallelism / 2)
-//	db.SetConnMaxLifetime(120 * time.Second)
-//
-//	basicOrders, err := queryBuOrderBasicInfos(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	gridOrders, err := queryGridProOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	pairedOrders, err := queryPairedExchangeOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//
-//	b.SetParallelism(parallelism)
-//	b.RunParallel(func(pb *testing.PB) {
-//		for pb.Next() {
-//			if err := process(db, basicOrders, gridOrders, pairedOrders, 10); err != nil {
-//				b.Error(err.Error())
-//			}
-//		}
-//	})
-//}
-//
-//func BenchmarkProcessBatch50(b *testing.B) {
-//	db, err := sql.Open("mysql", dataSourceName)
-//	if err != nil {
-//		panic(err.Error())
-//	}
-//	defer db.Close()
-//
-//	db.SetMaxOpenConns(parallelism)
-//	db.SetMaxIdleConns(parallelism / 2)
-//	db.SetConnMaxLifetime(120 * time.Second)
-//
-//	basicOrders, err := queryBuOrderBasicInfos(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	gridOrders, err := queryGridProOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	pairedOrders, err := queryPairedExchangeOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//
-//	b.SetParallelism(parallelism)
-//	b.RunParallel(func(pb *testing.PB) {
-//		for pb.Next() {
-//			if err := process(db, basicOrders, gridOrders, pairedOrders, 50); err != nil {
-//				b.Error(err.Error())
-//			}
-//		}
-//	})
-//}
-//
-//func BenchmarkProcessBatch100(b *testing.B) {
-//	db, err := sql.Open("mysql", dataSourceName)
-//	if err != nil {
-//		panic(err.Error())
-//	}
-//	defer db.Close()
-//
-//	db.SetMaxOpenConns(parallelism)
-//	db.SetMaxIdleConns(parallelism / 2)
-//	db.SetConnMaxLifetime(120 * time.Second)
-//
-//	basicOrders, err := queryBuOrderBasicInfos(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	gridOrders, err := queryGridProOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	pairedOrders, err := queryPairedExchangeOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//
-//	b.SetParallelism(parallelism)
-//	b.RunParallel(func(pb *testing.PB) {
-//		for pb.Next() {
-//			if err := process(db, basicOrders, gridOrders, pairedOrders, 100); err != nil {
-//				b.Error(err.Error())
-//			}
-//		}
-//	})
-//}
-//
-//func BenchmarkProcessBatch1000(b *testing.B) {
-//	db, err := sql.Open("mysql", dataSourceName)
-//	if err != nil {
-//		panic(err.Error())
-//	}
-//	defer db.Close()
-//
-//	db.SetMaxOpenConns(parallelism)
-//	db.SetMaxIdleConns(parallelism / 2)
-//	db.SetConnMaxLifetime(120 * time.Second)
-//
-//	basicOrders, err := queryBuOrderBasicInfos(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	gridOrders, err := queryGridProOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//	pairedOrders, err := queryPairedExchangeOrderData(db)
-//	if err != nil {
-//		b.Error(err.Error())
-//	}
-//
-//	b.SetParallelism(parallelism)
-//	b.RunParallel(func(pb *testing.PB) {
-//		for pb.Next() {
-//			if err := process(db, basicOrders, gridOrders, pairedOrders, 1000); err != nil {
-//				b.Error(err.Error())
-//			}
-//		}
-//	})
-//}
+func BenchmarkProcessBatch10(b *testing.B) {
+	db, err := sql.Open("mysql", dataSourceName)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	db.SetMaxOpenConns(parallelism)
+	db.SetMaxIdleConns(parallelism / 2)
+	db.SetConnMaxLifetime(120 * time.Second)
+
+	basicOrders, err := queryBuOrderBasicInfos(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+	gridOrders, err := queryGridProOrderData(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+	pairedOrders, err := queryPairedExchangeOrderData(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+
+	b.SetParallelism(parallelism)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 10); err != nil {
+				b.Error(err.Error())
+			}
+		}
+	})
+}
+
+func BenchmarkProcessBatch50(b *testing.B) {
+	db, err := sql.Open("mysql", dataSourceName)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	db.SetMaxOpenConns(parallelism)
+	db.SetMaxIdleConns(parallelism / 2)
+	db.SetConnMaxLifetime(120 * time.Second)
+
+	basicOrders, err := queryBuOrderBasicInfos(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+	gridOrders, err := queryGridProOrderData(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+	pairedOrders, err := queryPairedExchangeOrderData(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+
+	b.SetParallelism(parallelism)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 50); err != nil {
+				b.Error(err.Error())
+			}
+		}
+	})
+}
+
+func BenchmarkProcessBatch100(b *testing.B) {
+	db, err := sql.Open("mysql", dataSourceName)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	db.SetMaxOpenConns(parallelism)
+	db.SetMaxIdleConns(parallelism / 2)
+	db.SetConnMaxLifetime(120 * time.Second)
+
+	basicOrders, err := queryBuOrderBasicInfos(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+	gridOrders, err := queryGridProOrderData(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+	pairedOrders, err := queryPairedExchangeOrderData(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+
+	b.SetParallelism(parallelism)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 100); err != nil {
+				b.Error(err.Error())
+			}
+		}
+	})
+}
+
+func BenchmarkProcessBatch1000(b *testing.B) {
+	db, err := sql.Open("mysql", dataSourceName)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	db.SetMaxOpenConns(parallelism)
+	db.SetMaxIdleConns(parallelism / 2)
+	db.SetConnMaxLifetime(120 * time.Second)
+
+	basicOrders, err := queryBuOrderBasicInfos(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+	gridOrders, err := queryGridProOrderData(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+	pairedOrders, err := queryPairedExchangeOrderData(db)
+	if err != nil {
+		b.Error(err.Error())
+	}
+
+	b.SetParallelism(parallelism)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 1000); err != nil {
+				b.Error(err.Error())
+			}
+		}
+	})
+}
