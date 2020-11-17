@@ -810,11 +810,11 @@ func process(db *sql.DB, basicOrders []BuOrderBasicInfo, gridOrders []GridProOrd
 	}
 	defer tx.Rollback()
 
-	//j := rand.Intn(parallelism)
+	j := rand.Intn(parallelism)
 	for n := 0; n < times; n++ {
-		//i := rand.Intn(parallelism)
-		buOrderId := basicOrders[n+1].BuOrderId
-		buOrder := &basicOrders[n]
+		i := rand.Intn(parallelism)
+		buOrderId := basicOrders[j%parallelism].BuOrderId
+		buOrder := &basicOrders[i]
 		if _, err = tx.Exec(
 			updateBuOrderBasicInfoSQL,
 			buOrder.UserId,
@@ -836,7 +836,7 @@ func process(db *sql.DB, basicOrders []BuOrderBasicInfo, gridOrders []GridProOrd
 			return err
 		}
 
-		gridOrder := &gridOrders[n]
+		gridOrder := &gridOrders[i]
 		if _, err := tx.Exec(
 			updateGridProOrderDataSQL,
 			gridOrder.Top,
@@ -917,7 +917,7 @@ func process(db *sql.DB, basicOrders []BuOrderBasicInfo, gridOrders []GridProOrd
 		}
 
 		buOrderId = uuid.New().String()
-		pairedOrder := &pairedOrders[n]
+		pairedOrder := &pairedOrders[i]
 		if _, err := tx.Exec(
 			insertExchangeOrderDataSQL,
 			buOrderId,
@@ -1140,14 +1140,16 @@ func BenchmarkProcess(b *testing.B) {
 		b.Error(err.Error())
 	}
 
-	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
-	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
-	b.ResetTimer()
+	//basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	//gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	//b.ResetTimer()
 
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 1)
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 1); err != nil {
+				b.Error(err.Error())
+			}
 		}
 	})
 }
@@ -1176,14 +1178,16 @@ func BenchmarkProcessBatch10(b *testing.B) {
 		b.Error(err.Error())
 	}
 
-	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
-	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
-	b.ResetTimer()
+	//basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	//gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	//b.ResetTimer()
 
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 10)
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 10); err != nil {
+				b.Error(err.Error())
+			}
 		}
 	})
 }
@@ -1212,14 +1216,16 @@ func BenchmarkProcessBatch50(b *testing.B) {
 		b.Error(err.Error())
 	}
 
-	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
-	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
-	b.ResetTimer()
+	//basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	//gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	//b.ResetTimer()
 
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 50)
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 50); err != nil {
+				b.Error(err.Error())
+			}
 		}
 	})
 }
@@ -1248,14 +1254,16 @@ func BenchmarkProcessBatch100(b *testing.B) {
 		b.Error(err.Error())
 	}
 
-	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
-	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
-	b.ResetTimer()
+	//basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	//gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	//b.ResetTimer()
 
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 100)
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 100); err != nil {
+				b.Error(err.Error())
+			}
 		}
 	})
 }
@@ -1284,14 +1292,16 @@ func BenchmarkProcessBatch1000(b *testing.B) {
 		b.Error(err.Error())
 	}
 
-	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
-	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
-	b.ResetTimer()
+	//basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	//gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	//b.ResetTimer()
 
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 1000)
+			if err := process(db, basicOrders, gridOrders, pairedOrders, 100); err != nil {
+				b.Error(err.Error())
+			}
 		}
 	})
 }
