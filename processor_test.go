@@ -3,6 +3,7 @@ package benchmark
 import (
 	"database/sql"
 	"math/rand"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 
 const (
 	parallelism = 36
+
+	limit = 72000
 
 	// dataSourceName = "root:123456@tcp(localhost:3306)/trade_service?collation=utf8_unicode_ci&charset=utf8mb4"
 	dataSourceName = "portfolio:uYp-LSH-JK6-oHx@tcp(trading-bot-clone-auora-rds-4x-cluster.cluster-cmr8sblnu0ix.us-west-2.rds.amazonaws.com:3306)/trade_service?collation=utf8_unicode_ci&charset=utf8mb4"
@@ -29,6 +32,8 @@ const (
 	insertExchangeOrderDataSQL = "INSERT INTO `OrderStatusCenter_pairedexchangeorderdata_pionexv2_2020_09` (`bu_order_id`, `tag`, `buy_exchange_order_id`, `buy_timestamp`, `buy_datetime`, `buy_lastTradeTimestamp`, `buy_symbol`, `buy_exchange`, `buy_base`, `buy_quote`, `buy_type`, `buy_side`, `buy_price`, `buy_average`, `buy_cost`, `buy_amount`, `buy_filled`, `buy_remaining`, `buy_status`, `buy_fee`, `buy_fee_coin`, `buy_info`, `buy_fee_income_cost`, `buy_fee_income_coin`, `buy_fee_in_quote`, `buy_fee_refund_in_quote`, `buy_fee_in_base`, `buy_fee_refund_in_base`, `buy_strategy_id`, `buy_strategy_tag`, `buy_tag`, `buy_client_order_id`, `sell_exchange_order_id`, `sell_timestamp`, `sell_datetime`, `sell_lastTradeTimestamp`, `sell_symbol`, `sell_exchange`, `sell_base`, `sell_quote`, `sell_type`, `sell_side`, `sell_price`, `sell_average`, `sell_cost`, `sell_amount`, `sell_filled`, `sell_remaining`, `sell_status`, `sell_fee`, `sell_fee_coin`, `sell_info`, `sell_fee_income_cost`, `sell_fee_income_coin`, `sell_fee_in_quote`, `sell_fee_refund_in_quote`, `sell_fee_in_base`, `sell_fee_refund_in_base`, `sell_strategy_id`, `sell_strategy_tag`, `sell_tag`, `sell_client_order_id`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	updateExchangeOrderDataSQL = "UPDATE `OrderStatusCenter_pairedexchangeorderdata_pionexv2_2020_09` SET (`tag`=?, `buy_exchange_order_id`=?, `buy_timestamp`=?, `buy_datetime`=?, `buy_lastTradeTimestamp`=?, `buy_symbol`=?, `buy_exchange`=?, `buy_base`=?, `buy_quote`=?, `buy_type`=?, `buy_side`=?, `buy_price`=?, `buy_average`=?, `buy_cost`=?, `buy_amount`=?, `buy_filled`=?, `buy_remaining`=?, `buy_status`=?, `buy_fee`=?, `buy_fee_coin`=?, `buy_info`=?, `buy_fee_income_cost`=?, `buy_fee_income_coin`=?, `buy_fee_in_quote`=?, `buy_fee_refund_in_quote`=?, `buy_fee_in_base`=?, `buy_fee_refund_in_base`=?, `buy_strategy_id`=?, `buy_strategy_tag`=?, `buy_tag`=?, `buy_client_order_id`=?, `sell_exchange_order_id`=?, `sell_timestamp`=?, `sell_datetime`=?, `sell_lastTradeTimestamp`=?, `sell_symbol`=?, `sell_exchange`=?, `sell_base`=?, `sell_quote`=?, `sell_type`=?, `sell_side`=?, `sell_price`=?, `sell_average`=?, `sell_cost`=?, `sell_amount`=?, `sell_filled`=?, `sell_remaining`=?, `sell_status`=?, `sell_fee`=?, `sell_fee_coin`=?, `sell_info`=?, `sell_fee_income_cost`=?, `sell_fee_income_coin`=?, `sell_fee_in_quote`=?, `sell_fee_refund_in_quote`=?, `sell_fee_in_base`=?, `sell_fee_refund_in_base`=?, `sell_strategy_id`=?, `sell_strategy_tag`=?, `sell_tag`=?, `sell_client_order_id`=? WHERE `bu_order_id`=?) WHERE `bu_order_id`=?"
 )
+
+var count int32 = -1
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -201,8 +206,8 @@ type PairedExchangeOrderData struct {
 }
 
 func queryBuOrderBasicInfos(db *sql.DB) ([]BuOrderBasicInfo, error) {
-	orders := make([]BuOrderBasicInfo, parallelism)
-	rows, err := db.Query(selectBuOrderBasicInfoSQL, parallelism)
+	orders := make([]BuOrderBasicInfo, limit)
+	rows, err := db.Query(selectBuOrderBasicInfoSQL, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -239,8 +244,8 @@ func queryBuOrderBasicInfos(db *sql.DB) ([]BuOrderBasicInfo, error) {
 }
 
 func queryGridProOrderData(db *sql.DB) ([]GridProOrderData, error) {
-	orders := make([]GridProOrderData, parallelism)
-	rows, err := db.Query(selectGridProOrderDataSQL, parallelism)
+	orders := make([]GridProOrderData, limit)
+	rows, err := db.Query(selectGridProOrderDataSQL, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -337,8 +342,8 @@ func queryGridProOrderData(db *sql.DB) ([]GridProOrderData, error) {
 }
 
 func queryPairedExchangeOrderData(db *sql.DB) ([]PairedExchangeOrderData, error) {
-	orders := make([]PairedExchangeOrderData, parallelism)
-	rows, err := db.Query(selectExchangeOrderDataSQL, parallelism)
+	orders := make([]PairedExchangeOrderData, limit)
+	rows, err := db.Query(selectExchangeOrderDataSQL, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -805,11 +810,11 @@ func process(db *sql.DB, basicOrders []BuOrderBasicInfo, gridOrders []GridProOrd
 	}
 	defer tx.Rollback()
 
-	j := rand.Intn(parallelism)
+	//j := rand.Intn(parallelism)
 	for n := 0; n < times; n++ {
-		i := rand.Intn(parallelism)
-		buOrderId := basicOrders[j%parallelism].BuOrderId
-		buOrder := &basicOrders[i]
+		//i := rand.Intn(parallelism)
+		buOrderId := basicOrders[n+1].BuOrderId
+		buOrder := &basicOrders[n]
 		if _, err = tx.Exec(
 			updateBuOrderBasicInfoSQL,
 			buOrder.UserId,
@@ -831,7 +836,7 @@ func process(db *sql.DB, basicOrders []BuOrderBasicInfo, gridOrders []GridProOrd
 			return err
 		}
 
-		gridOrder := &gridOrders[i]
+		gridOrder := &gridOrders[n]
 		if _, err := tx.Exec(
 			updateGridProOrderDataSQL,
 			gridOrder.Top,
@@ -912,7 +917,7 @@ func process(db *sql.DB, basicOrders []BuOrderBasicInfo, gridOrders []GridProOrd
 		}
 
 		buOrderId = uuid.New().String()
-		pairedOrder := &pairedOrders[i]
+		pairedOrder := &pairedOrders[n]
 		if _, err := tx.Exec(
 			insertExchangeOrderDataSQL,
 			buOrderId,
@@ -1063,6 +1068,54 @@ func process(db *sql.DB, basicOrders []BuOrderBasicInfo, gridOrders []GridProOrd
 //	})
 //}
 
+func splitBasicOrders(arr []BuOrderBasicInfo, num int) [][]BuOrderBasicInfo {
+	max := len(arr)
+	if max < num {
+		return nil
+	}
+	var segmens = make([][]BuOrderBasicInfo, 0)
+	quantity := max / num
+	end := 0
+	for i := 1; i <= num; i++ {
+		qu := i * quantity
+		if i != num {
+			segmens = append(segmens, arr[i-1+end:qu])
+		} else {
+			segmens = append(segmens, arr[i-1+end:])
+		}
+		end = qu - i
+	}
+	return segmens
+}
+
+func splitGridOrders(arr []GridProOrderData, num int) [][]GridProOrderData {
+	max := len(arr)
+	if max < num {
+		return nil
+	}
+	var segmens = make([][]GridProOrderData, 0)
+	quantity := max / num
+	end := 0
+	for i := 1; i <= num; i++ {
+		qu := i * quantity
+		if i != num {
+			segmens = append(segmens, arr[i-1+end:qu])
+		} else {
+			segmens = append(segmens, arr[i-1+end:])
+		}
+		end = qu - i
+	}
+	return segmens
+}
+
+func p(b *testing.B, db *sql.DB, basicOrderSlice [][]BuOrderBasicInfo, gridOrderSlice [][]GridProOrderData, pairedOrders []PairedExchangeOrderData, times int) {
+	atomic.AddInt32(&count, 1)
+
+	if err := process(db, basicOrderSlice[count%parallelism], gridOrderSlice[count%parallelism], pairedOrders, times); err != nil {
+		b.Error(err.Error())
+	}
+}
+
 func BenchmarkProcess(b *testing.B) {
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
@@ -1087,12 +1140,14 @@ func BenchmarkProcess(b *testing.B) {
 		b.Error(err.Error())
 	}
 
+	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	b.ResetTimer()
+
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if err := process(db, basicOrders, gridOrders, pairedOrders, 1); err != nil {
-				b.Error(err.Error())
-			}
+			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 1)
 		}
 	})
 }
@@ -1121,12 +1176,14 @@ func BenchmarkProcessBatch10(b *testing.B) {
 		b.Error(err.Error())
 	}
 
+	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	b.ResetTimer()
+
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if err := process(db, basicOrders, gridOrders, pairedOrders, 10); err != nil {
-				b.Error(err.Error())
-			}
+			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 10)
 		}
 	})
 }
@@ -1155,12 +1212,14 @@ func BenchmarkProcessBatch50(b *testing.B) {
 		b.Error(err.Error())
 	}
 
+	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	b.ResetTimer()
+
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if err := process(db, basicOrders, gridOrders, pairedOrders, 50); err != nil {
-				b.Error(err.Error())
-			}
+			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 50)
 		}
 	})
 }
@@ -1189,12 +1248,14 @@ func BenchmarkProcessBatch100(b *testing.B) {
 		b.Error(err.Error())
 	}
 
+	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	b.ResetTimer()
+
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if err := process(db, basicOrders, gridOrders, pairedOrders, 100); err != nil {
-				b.Error(err.Error())
-			}
+			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 100)
 		}
 	})
 }
@@ -1223,12 +1284,14 @@ func BenchmarkProcessBatch1000(b *testing.B) {
 		b.Error(err.Error())
 	}
 
+	basicOrderSlice := splitBasicOrders(basicOrders, parallelism)
+	gridOrderSlice := splitGridOrders(gridOrders, parallelism)
+	b.ResetTimer()
+
 	b.SetParallelism(parallelism)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if err := process(db, basicOrders, gridOrders, pairedOrders, 1000); err != nil {
-				b.Error(err.Error())
-			}
+			p(b, db, basicOrderSlice, gridOrderSlice, pairedOrders, 1000)
 		}
 	})
 }
